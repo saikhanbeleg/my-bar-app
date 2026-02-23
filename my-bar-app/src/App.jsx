@@ -1,19 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 
-
 const NUM_ROWS = 10;
 
 const store = {
   async get(key) {
-    try {
-      const r = localStorage.getItem(key);
-      return r ? JSON.parse(r) : null;
-    } catch { return null; }
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; }
+    catch { return null; }
   },
   async set(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {}
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
   }
 };
 
@@ -87,11 +82,11 @@ export default function App() {
   ];
 
   return (
-    <div style={{display:"flex", minHeight:"100vh", fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif"}}>
+    <div style={{display:"flex", height:"100vh", width:"100vw", fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif", overflow:"hidden"}}>
 
-      {/* Sidebar */}
+      {/* Sidebar — fixed width */}
       {view !== "day" && (
-        <aside style={{width:220, minWidth:220, background:"#025864", display:"flex", flexDirection:"column", flexShrink:0, boxShadow:"4px 0 20px rgba(2,88,100,0.3)"}}>
+        <aside style={{width:"220px", minWidth:"220px", maxWidth:"220px", background:"#025864", display:"flex", flexDirection:"column", height:"100vh", boxShadow:"4px 0 20px rgba(2,88,100,0.3)"}}>
           <div style={{padding:"26px 20px 18px", borderBottom:"1px solid rgba(255,255,255,0.1)"}}>
             <div style={{display:"flex", alignItems:"center", gap:10}}>
               <div style={{width:32,height:32,background:"#00D47E",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🍸</div>
@@ -122,8 +117,8 @@ export default function App() {
         </aside>
       )}
 
-      {/* Main — takes all remaining space */}
-      <div style={{flex:1, minWidth:0, background:"#eef1f4", overflow:"auto", display:"flex", flexDirection:"column"}}>
+      {/* Main content — fills ALL remaining space */}
+      <div style={{flex:1, background:"#eef1f4", overflow:"auto", height:"100vh", display:"flex", flexDirection:"column"}}>
         {view === "calendar" && (
           <CalendarView calMonth={calMonth} setCalMonth={setCalMonth} hasData={hasData} onDayClick={openDay} />
         )}
@@ -145,7 +140,7 @@ export default function App() {
 }
 
 /* ═══════════════════════════════════════════
-   CALENDAR VIEW
+   CALENDAR VIEW — full width
 ═══════════════════════════════════════════ */
 function CalendarView({ calMonth, setCalMonth, hasData, onDayClick }) {
   const { year, month } = calMonth;
@@ -168,33 +163,60 @@ function CalendarView({ calMonth, setCalMonth, hasData, onDayClick }) {
   while (cells.length < 42) cells.push({day: cells.length-firstDay-daysInMonth+1, cur:false});
 
   return (
-    <div style={{flex:1, padding:"32px", boxSizing:"border-box", width:"100%"}}>
+    <div style={{
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      padding: "32px",
+      width: "100%",
+      boxSizing: "border-box",
+    }}>
       <style>{`
-        *{box-sizing:border-box;}
-        .cal-cell{min-height:100px;padding:8px;border-radius:10px;border:1px solid #f1f5f9;background:#fafafa;cursor:pointer;transition:all 0.12s;position:relative;}
-        .cal-cell:hover{border-color:#00D47E;background:#f0fdf8;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,212,126,0.12);}
-        .cal-cell.istoday{border:2px solid #00D47E!important;background:#f0fdf8!important;}
-        .cal-cell.faded{background:transparent;border-color:transparent;cursor:default;}
-        .cal-cell.faded:hover{transform:none;box-shadow:none;background:transparent;border-color:transparent;}
-        .nbtn{background:#f1f5f9;border:none;border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
-        .nbtn:hover{background:#e2e8f0;}
-        .tbtn{background:#025864;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:background 0.15s;}
-        .tbtn:hover{background:#037a8a;}
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
+        .cal-cell {
+          padding: 10px;
+          border-radius: 10px;
+          border: 1px solid #f1f5f9;
+          background: #fafafa;
+          cursor: pointer;
+          transition: all 0.12s;
+          position: relative;
+          min-height: 90px;
+        }
+        .cal-cell:hover { border-color:#00D47E; background:#f0fdf8; transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,212,126,0.12); }
+        .cal-cell.istoday { border: 2px solid #00D47E !important; background: #f0fdf8 !important; }
+        .cal-cell.faded { background: transparent; border-color: transparent; cursor: default; }
+        .cal-cell.faded:hover { transform:none; box-shadow:none; background:transparent; border-color:transparent; }
+        .nbtn { background:#f1f5f9; border:none; border-radius:8px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
+        .nbtn:hover { background:#e2e8f0; }
+        .tbtn { background:#025864; color:#fff; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; transition:background 0.15s; }
+        .tbtn:hover { background:#037a8a; }
       `}</style>
 
-      <div style={{marginBottom:28}}>
+      <div style={{marginBottom:24}}>
         <h1 style={{fontSize:26,fontWeight:700,color:"#025864",marginBottom:6}}>Хуанли</h1>
-        <p style={{color:"#64748b",fontSize:14}}>Өдрийг сонгоод тухайн өдрийн бараа бүртгэлийг нээнэ үү.</p>
+        <p style={{color:"#64748b",fontSize:14,margin:0}}>Өдрийг сонгоод тухайн өдрийн бараа бүртгэлийг нээнэ үү.</p>
       </div>
 
-      {/* Calendar card — full width */}
-      <div style={{background:"#fff",borderRadius:14,boxShadow:"0 1px 4px rgba(0,0,0,0.06)",padding:28,width:"100%"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
+      {/* Calendar card — 100% width, flex:1 to fill height */}
+      <div style={{
+        background:"#fff",
+        borderRadius:14,
+        boxShadow:"0 1px 4px rgba(0,0,0,0.06)",
+        padding:"24px",
+        width:"100%",
+        flex:1,
+        display:"flex",
+        flexDirection:"column",
+      }}>
+        {/* Month nav */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
           <button className="nbtn" onClick={prev}>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#025864" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
-            <div style={{fontSize:20,fontWeight:700,color:"#025864"}}>{MONTHS[month]} {year}</div>
+            <div style={{fontSize:22,fontWeight:700,color:"#025864"}}>{MONTHS[month]} {year}</div>
             <button className="tbtn" onClick={goToday}>Өнөөдөр</button>
           </div>
           <button className="nbtn" onClick={next}>
@@ -202,31 +224,47 @@ function CalendarView({ calMonth, setCalMonth, hasData, onDayClick }) {
           </button>
         </div>
 
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:8}}>
-          {WEEKDAYS.map(d => <div key={d} style={{textAlign:"center",fontSize:12,fontWeight:600,color:"#94a3b8",padding:"4px 0"}}>{d}</div>)}
+        {/* Weekday headers */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:6,marginBottom:6}}>
+          {WEEKDAYS.map(d => (
+            <div key={d} style={{textAlign:"center",fontSize:12,fontWeight:700,color:"#94a3b8",padding:"6px 0"}}>
+              {d}
+            </div>
+          ))}
         </div>
 
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:6}}>
+        {/* Day grid — flex:1 so it stretches to fill */}
+        <div style={{display:"grid", gridTemplateColumns:"repeat(7,1fr)", gridTemplateRows:"repeat(6, 1fr)", gap:6, flex:1}}>
           {cells.map((cell,i) => {
             const dateKey = cell.cur ? ds(cell.day) : null;
             const isToday = dateKey===ts;
             const active  = dateKey && hasData(dateKey);
             return (
-              <div key={i} className={`cal-cell${isToday?" istoday":""}${!cell.cur?" faded":""}`}
-                onClick={() => cell.cur && onDayClick(dateKey)}>
+              <div
+                key={i}
+                className={`cal-cell${isToday?" istoday":""}${!cell.cur?" faded":""}`}
+                onClick={() => cell.cur && onDayClick(dateKey)}
+              >
                 {cell.cur ? (
                   <>
-                    <div style={{fontSize:14,fontWeight:isToday?700:500,color:isToday?"#00D47E":"#1e293b",marginBottom:4}}>{cell.day}</div>
-                    {active && <div style={{fontSize:10,background:"#00D47E22",color:"#025864",padding:"2px 6px",borderRadius:4,display:"inline-block",fontWeight:600}}>✓ бүртгэлтэй</div>}
+                    <div style={{fontSize:14,fontWeight:isToday?700:500,color:isToday?"#00D47E":"#1e293b",marginBottom:4}}>
+                      {cell.day}
+                    </div>
+                    {active && (
+                      <div style={{fontSize:10,background:"#00D47E22",color:"#025864",padding:"2px 6px",borderRadius:4,display:"inline-block",fontWeight:600}}>
+                        ✓ бүртгэлтэй
+                      </div>
+                    )}
                   </>
                 ) : (
-                  <div style={{fontSize:13,color:"#cbd5e1"}}>{cell.day}</div>
+                  <div style={{fontSize:13,color:"#e2e8f0"}}>{cell.day}</div>
                 )}
               </div>
             );
           })}
         </div>
 
+        {/* Footer */}
         <div style={{marginTop:16,display:"flex",justifyContent:"space-between",color:"#94a3b8",fontSize:12,flexWrap:"wrap",gap:8}}>
           <span>✓ бүртгэлтэй = тухайн өдөрт мэдээлэл оруулсан</span>
           <span>Оройн үлдэгдэл → маргааш өглөөний тоо болно</span>
@@ -301,7 +339,7 @@ function DayView({ dateStr, names, setNames, dayData, setDayData, onBack }) {
   return (
     <div style={{minHeight:"100vh",background:"#eef1f4",fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif",paddingBottom:100}}>
       <style>{`
-        *{box-sizing:border-box;}
+        *, *::before, *::after { box-sizing: border-box; }
         input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
         input[type=number]{-moz-appearance:textfield;}
         .ci{background:transparent;border:none;outline:none;font-family:inherit;font-size:14px;width:100%;text-align:center;color:#1e293b;padding:2px 0;}
@@ -490,7 +528,7 @@ function ChatView({ messages, setMessages }) {
   return (
     <div style={{display:"flex",flexDirection:"column",height:"100vh",fontFamily:"'Helvetica Neue',Helvetica,Arial,sans-serif"}}>
       <style>{`
-        *{box-sizing:border-box;}
+        *, *::before, *::after { box-sizing: border-box; }
         .msg-bubble{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:1px solid #f1f5f9;transition:border-color 0.15s;}
         .msg-bubble:hover{border-color:#e2e8f0;}
         .act-btn{background:none;border:1px solid;border-radius:6px;padding:3px 10px;font-size:11px;font-family:inherit;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
