@@ -170,7 +170,7 @@ function CalendarView({ calMonth, setCalMonth, hasData, onDayClick }) {
   while (cells.length < 42) cells.push({day: cells.length-firstDay-daysInMonth+1, cur:false});
 
   return (
-    <div style={{padding:"32px"}}>
+    <div style={{padding:"32px",maxWidth:"100%",width:"100%"}}>
       <style>{`
         *{box-sizing:border-box;}
         .cal-cell{min-height:82px;padding:8px;border-radius:10px;border:1px solid #f1f5f9;background:#fafafa;cursor:pointer;transition:all 0.12s;position:relative;}
@@ -189,7 +189,7 @@ function CalendarView({ calMonth, setCalMonth, hasData, onDayClick }) {
         <p style={{color:"#64748b",fontSize:14}}>Өдрийг сонгоод тухайн өдрийн бараа бүртгэлийг нээнэ үү.</p>
       </div>
 
-      <div style={{background:"#fff",borderRadius:14,boxShadow:"0 1px 4px rgba(0,0,0,0.06)",padding:28}}>
+      <div style={{background:"#fff",borderRadius:14,boxShadow:"0 1px 4px rgba(0,0,0,0.06)",padding:28,maxWidth:"100%"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
           <button className="nbtn" onClick={prev}>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#025864" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
