@@ -170,7 +170,7 @@ function CalendarView({ calMonth, setCalMonth, hasData, onDayClick }) {
   while (cells.length < 42) cells.push({day: cells.length-firstDay-daysInMonth+1, cur:false});
 
   return (
-    <div style={{padding:"32px",maxWidth:"100%",width:"100%"}}>
+    <div style={{padding:"32px", maxWidth:"900px", margin:"0 auto", width:"100%"}}>
       <style>{`
         *{box-sizing:border-box;}
         .cal-cell{min-height:82px;padding:8px;border-radius:10px;border:1px solid #f1f5f9;background:#fafafa;cursor:pointer;transition:all 0.12s;position:relative;}
