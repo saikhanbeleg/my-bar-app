@@ -416,7 +416,7 @@ function CalendarView({ uid, onDayClick, hasData }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // DAY VIEW — original fixed-column design, unlimited rows
 // ═══════════════════════════════════════════════════════════════════════════
-const BLANK_ROW = () => ({ name:"", morning:"", evening:"", expense:"" });
+const BLANK_ROW = () => ({ name:"", price:"", morning:"", evening:"", expense:"", totalSales:"" });
 
 function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
   const [flash, setFlash] = useState(false);
@@ -426,9 +426,9 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
     const prev = prevDayStr(ds);
     const prevDay = allDays[prev];
     if (prevDay && prevDay.savedEvening && prevDay.rows) {
-      // auto-fill: copy evening → morning, clear evening & expense
+      // auto-fill: copy evening → morning, keep price, clear evening & calculated fields
       return {
-        rows: prevDay.rows.map(r=>({ name:r.name, morning:r.evening, evening:"", expense:"" })),
+        rows: prevDay.rows.map(r=>({ name:r.name, price:r.price||"", morning:r.evening, evening:"", expense:"", totalSales:"" })),
         savedMorning:false, savedEvening:false, autoFilledFrom:prev
       };
     }
@@ -440,7 +440,6 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
   const [savedMorning, setSavedMorning] = useState(dayData.savedMorning||false);
   const [savedEvening, setSavedEvening] = useState(dayData.savedEvening||false);
 
-  // reset when date changes
   useEffect(()=>{
     const d = getDay(dateStr);
     setRows(d.rows||[BLANK_ROW()]);
@@ -456,9 +455,13 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
 
   const handleSave = () => {
     const saved = rows.map(r => {
-      const mv = parseFloat(r.morning)||0, ev = parseFloat(r.evening)||0;
+      const mv = parseFloat(r.morning)||0;
+      const ev = parseFloat(r.evening)||0;
+      const pv = parseFloat(r.price)||0;
       const expense = (mv===0&&ev===0) ? "" : String(Math.max(0,mv-ev));
-      return {...r, expense};
+      const soldQty = Math.max(0, mv - ev);
+      const totalSales = (pv > 0 && soldQty > 0) ? String(soldQty * pv) : "";
+      return {...r, expense, totalSales};
     });
     setRows(saved);
     const hasMorning = saved.some(r=>r.morning!=="");
@@ -473,9 +476,10 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
     setTimeout(()=>setFlash(false),1800);
   };
 
-  const totalMorning = rows.reduce((s,r)=>s+(parseFloat(r.morning)||0),0);
-  const totalEvening = rows.reduce((s,r)=>s+(parseFloat(r.evening)||0),0);
-  const totalExpense = rows.reduce((s,r)=>s+(parseFloat(r.expense)||0),0);
+  const totalMorning  = rows.reduce((s,r)=>s+(parseFloat(r.morning)||0),0);
+  const totalEvening  = rows.reduce((s,r)=>s+(parseFloat(r.evening)||0),0);
+  const totalExpense  = rows.reduce((s,r)=>s+(parseFloat(r.expense)||0),0);
+  const totalSalesSum = rows.reduce((s,r)=>s+(parseFloat(r.totalSales)||0),0);
 
   const [y,mo,d] = dateStr.split("-").map(Number);
   const label = new Date(y,mo-1,d).toLocaleDateString("mn-MN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
@@ -487,8 +491,15 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
 
   const cellStyle = (bg) => ({ padding:"6px 10px", background:bg });
 
+  const inStyle = (color, align="center") => ({
+    width:"100%", border:"none", outline:"none",
+    fontFamily:"'DM Mono',monospace", fontSize:13, fontWeight:700,
+    color, background:"transparent", textAlign:align, padding:"4px 0",
+  });
+
   return (
     <div style={{minHeight:"100vh",background:"#eef1f4",paddingBottom:100}}>
+      {/* Top bar */}
       <div style={{background:"#025864",padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 2px 12px rgba(2,88,100,0.3)"}}>
         <button className="back-btn-dv" onClick={onBack}>
           <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -500,7 +511,12 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
           {dayData.autoFilledFrom && <div style={{fontSize:11,color:"#86efac",marginTop:2}}>↑ Өчигдрийн оройн тоо автоматаар орлоо</div>}
         </div>
         <div style={{display:"flex",gap:16}}>
-          {[{l:"Өглөө",v:totalMorning||"—",c:"#7dd3e8"},{l:"Орой",v:totalEvening||"—",c:"#86efac"},{l:"Зарлага",v:totalExpense||"—",c:"#fde68a"}].map(s=>(
+          {[
+            {l:"Өглөө",  v:totalMorning||"—",  c:"#7dd3e8"},
+            {l:"Орой",   v:totalEvening||"—",   c:"#86efac"},
+            {l:"Зарлага",v:totalExpense||"—",   c:"#fde68a"},
+            {l:"Борлуулалт",v:totalSalesSum>0?(totalSalesSum.toLocaleString()+"₮"):"—",c:"#f9a8d4"},
+          ].map(s=>(
             <div key={s.l} style={{textAlign:"right"}}>
               <div style={{fontSize:9,color:"rgba(255,255,255,0.5)",letterSpacing:"1px",textTransform:"uppercase",marginBottom:2}}>{s.l}</div>
               <div style={{fontSize:15,fontWeight:800,color:s.c}}>{s.v}</div>
@@ -513,7 +529,7 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
         {dayData.autoFilledFrom && (
           <div style={{background:"#dbeafe",border:"1px solid #93c5fd",borderRadius:10,padding:"10px 16px",marginBottom:14,fontSize:13,color:"#1d4ed8",display:"flex",alignItems:"center",gap:8}}>
             <span>🔄</span>
-            <span>Өчигдрийн <strong>оройн үлдэгдэл</strong> өнөөдрийн <strong>өглөөний тоо</strong>-нд автоматаар орлоо.</span>
+            <span>Өчигдрийн <strong>оройн үлдэгдэл</strong> өнөөдрийн <strong>өглөөний тоо</strong>-нд автоматаар орлоо. Нэгж үнэ хадгалагдсан.</span>
           </div>
         )}
 
@@ -521,12 +537,14 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
           <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
             <thead>
               <tr>
-                <th style={{...thS("center","#334155"),width:"4%"}}>#</th>
-                <th style={{...thS("left","#334155"),  width:"28%"}}>Барааны нэр</th>
-                <th style={{...thS("center","#1d4ed8"),width:"18%"}}>Өглөөний тоо</th>
-                <th style={{...thS("center","#15803d"),width:"18%"}}>Оройн тоо</th>
-                <th style={{...thS("center","#a16207"),width:"18%"}}>Зарлага</th>
-                <th style={{...thS("center","#334155"),width:"5%"}}></th>
+                <th style={{...thS("center","#334155"),width:"3%"}}>#</th>
+                <th style={{...thS("left","#334155"),  width:"22%"}}>Барааны нэр</th>
+                <th style={{...thS("center","#7c3aed"),width:"12%"}}>Нэгж үнэ ₮</th>
+                <th style={{...thS("center","#1d4ed8"),width:"13%"}}>Өглөөний тоо</th>
+                <th style={{...thS("center","#15803d"),width:"13%"}}>Оройн тоо</th>
+                <th style={{...thS("center","#a16207"),width:"12%"}}>Зарлага</th>
+                <th style={{...thS("center","#be185d"),width:"18%"}}>Нийт борлуулалт ₮</th>
+                <th style={{...thS("center","#334155"),width:"4%"}}></th>
               </tr>
             </thead>
             <tbody>
@@ -538,19 +556,31 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
                       placeholder={`${i+1}-р бараа…`}
                       style={{width:"100%",border:"none",outline:"none",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,color:"#1e293b",background:"transparent",padding:"4px 2px"}}/>
                   </td>
-                  <td style={cellStyle("#eff6ff")}>
-                    <input type="number" value={row.morning} onChange={e=>updateRow(i,"morning",e.target.value)}
+                  <td style={cellStyle("#f5f3ff")}>
+                    <input value={row.price} onChange={e=>updateRow(i,"price",e.target.value)}
                       placeholder="—"
-                      style={{width:"100%",border:"none",outline:"none",fontFamily:"'DM Mono',monospace",fontSize:13,fontWeight:700,color:"#1d4ed8",background:"transparent",textAlign:"center",padding:"4px 0"}}/>
+                      style={{...inStyle("#7c3aed")}}/>
+                  </td>
+                  <td style={cellStyle("#eff6ff")}>
+                    <input value={row.morning} onChange={e=>updateRow(i,"morning",e.target.value)}
+                      placeholder="—"
+                      style={{...inStyle("#1d4ed8")}}/>
                   </td>
                   <td style={cellStyle("#f0fdf4")}>
-                    <input type="number" value={row.evening} onChange={e=>updateRow(i,"evening",e.target.value)}
+                    <input value={row.evening} onChange={e=>updateRow(i,"evening",e.target.value)}
                       placeholder="—"
-                      style={{width:"100%",border:"none",outline:"none",fontFamily:"'DM Mono',monospace",fontSize:13,fontWeight:700,color:"#15803d",background:"transparent",textAlign:"center",padding:"4px 0"}}/>
+                      style={{...inStyle("#15803d")}}/>
                   </td>
                   <td style={{...cellStyle("#fefce8"),textAlign:"center"}}>
                     <span style={{fontSize:13,fontWeight:700,color:row.expense&&row.expense!=="0"?"#a16207":"#d1d5db"}}>
                       {row.expense&&row.expense!=="0"&&row.expense!==""?row.expense:"—"}
+                    </span>
+                  </td>
+                  <td style={{...cellStyle("#fdf2f8"),textAlign:"center"}}>
+                    <span style={{fontSize:13,fontWeight:800,color:row.totalSales&&row.totalSales!=="0"?"#be185d":"#d1d5db"}}>
+                      {row.totalSales&&row.totalSales!=="0"&&row.totalSales!==""
+                        ? (parseFloat(row.totalSales)).toLocaleString()+"₮"
+                        : (row.price&&row.expense ? "⏳" : "—")}
                     </span>
                   </td>
                   <td style={{...cellStyle("#f8fafc"),textAlign:"center"}}>
@@ -562,16 +592,20 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
               ))}
               {/* Total row */}
               <tr style={{borderTop:"2px solid #e2e8f0",background:"#f8fafc"}}>
-                <td style={{padding:"10px"}}/>
-                <td style={{padding:"10px 12px",color:"#475569",fontSize:11,textTransform:"uppercase",letterSpacing:"0.5px",fontWeight:700}}>Нийт дүн</td>
+                <td style={{padding:"10px"}} colSpan={2}>
+                  <span style={{padding:"10px 0px",color:"#475569",fontSize:11,textTransform:"uppercase",letterSpacing:"0.5px",fontWeight:700}}>Нийт дүн</span>
+                </td>
+                <td style={{padding:"10px",textAlign:"center",color:"#7c3aed",fontSize:12,fontWeight:700,fontFamily:"'DM Mono',monospace"}}>—</td>
                 <td style={{padding:"10px",textAlign:"center",color:"#1d4ed8",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{totalMorning>0?totalMorning:"—"}</td>
                 <td style={{padding:"10px",textAlign:"center",color:"#15803d",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{totalEvening>0?totalEvening:"—"}</td>
                 <td style={{padding:"10px",textAlign:"center",color:"#a16207",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{totalExpense>0?totalExpense:"—"}</td>
+                <td style={{padding:"10px",textAlign:"center",color:"#be185d",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>
+                  {totalSalesSum>0?totalSalesSum.toLocaleString()+"₮":"—"}
+                </td>
                 <td/>
               </tr>
             </tbody>
           </table>
-          {/* Add row button — inside the card */}
           <div style={{padding:"8px 12px",borderTop:"1px dashed #e2e8f0"}}>
             <button onClick={addRow}
               style={{width:"100%",padding:"8px",background:"transparent",border:"1.5px dashed #c8d6de",borderRadius:8,color:"#94a3b8",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all 0.15s"}}
@@ -584,8 +618,8 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
 
         <div style={{marginTop:12,display:"flex",gap:10,flexWrap:"wrap"}}>
           {savedMorning && <div style={{background:"#dbeafe",border:"1px solid #93c5fd",borderRadius:8,padding:"5px 12px",fontSize:12,color:"#1d4ed8",fontWeight:600}}>✓ Өглөөний тоо хадгалагдсан</div>}
-          {savedEvening && <div style={{background:"#dcfce7",border:"1px solid #86efac",borderRadius:8,padding:"5px 12px",fontSize:12,color:"#15803d",fontWeight:600}}>✓ Оройн тоо хадгалагдсан · Зарлага тооцоологдсон</div>}
-          {!savedMorning&&!savedEvening&&<div style={{fontSize:12,color:"#94a3b8"}}>Мэдээлэл оруулаад <strong>Хадгалах</strong> товчийг дарна уу.</div>}
+          {savedEvening && <div style={{background:"#dcfce7",border:"1px solid #86efac",borderRadius:8,padding:"5px 12px",fontSize:12,color:"#15803d",fontWeight:600}}>✓ Оройн тоо · Зарлага · Борлуулалт тооцоологдсон</div>}
+          {!savedMorning&&!savedEvening&&<div style={{fontSize:12,color:"#94a3b8"}}>Нэгж үнэ болон тоо оруулаад <strong>Хадгалах</strong> дарна уу. Борлуулалт автоматаар тооцоологдоно.</div>}
         </div>
       </div>
 
