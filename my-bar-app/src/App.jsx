@@ -222,7 +222,7 @@ function ExcelTable({ tableData, onUpdate, readOnly=false }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // LOGIN / REGISTER
 // ═══════════════════════════════════════════════════════════════════════════
-function LoginView({ onLogin }) {
+function LoginView({ onLogin, onCancel }) {
   const [mode, setMode] = useState("login");
   const [cid, setCid]   = useState("");
   const [name, setName] = useState("");
@@ -246,45 +246,107 @@ function LoginView({ onLogin }) {
     onLogin({ id: cid.trim(), name: name.trim() });
   };
 
-  return (
-    <div className="login-wrap">
-      <div className="login-card">
-        <div className="login-logo">
-          <div className="login-logo-icon">🍸</div>
-          <div>
-            <div className="login-title">BarBook</div>
-          </div>
+  const card = (
+    <div className="login-card">
+      {/* Logo */}
+      <div className="login-logo">
+        <div className="login-logo-icon">🍸</div>
+        <div>
+          <div className="login-title">BarBook</div>
         </div>
-        <div className="login-subtitle">{mode==="login" ? "Нэвтрэх" : "Шинэ бүртгэл үүсгэх"}</div>
-
-        {err && <div className="login-err">{err}</div>}
-
-        {mode === "create" && (
-          <div className="login-field">
-            <label className="login-label">Таны нэр</label>
-            <input className="login-input" value={name} onChange={e=>setName(e.target.value)} placeholder="Жишээ: Бат" onKeyDown={e=>e.key==="Enter"&&handleCreate()}/>
-          </div>
-        )}
-
-        <div className="login-field">
-          <label className="login-label">Нэвтрэх ID</label>
-          <input className="login-input" value={cid} onChange={e=>setCid(e.target.value)} placeholder="Жишээ: bat2024" onKeyDown={e=>e.key==="Enter"&&(mode==="login"?handleLogin():handleCreate())}/>
-        </div>
-
-        {mode === "login" ? (
-          <>
-            <button className="login-btn" onClick={handleLogin}>Нэвтрэх →</button>
-            <div className="login-divider">эсвэл</div>
-            <button className="login-alt-btn" onClick={()=>{setMode("create");setErr("");}}>Шинэ бүртгэл үүсгэх</button>
-          </>
-        ) : (
-          <>
-            <button className="login-btn" onClick={handleCreate}>Бүртгэл үүсгэх →</button>
-            <div className="login-divider">эсвэл</div>
-            <button className="login-alt-btn" onClick={()=>{setMode("login");setErr("");}}>← Нэвтрэхийн буцах</button>
-          </>
-        )}
       </div>
+
+      {/* Subtitle */}
+      <div className="login-subtitle">
+        {mode==="login" ? "Өрийн дэвтэрт нэвтрэх" : "Шинэ бүртгэл үүсгэх"}
+      </div>
+
+      {/* Error */}
+      {err && <div className="login-err">{err}</div>}
+
+      {/* Name field (create only) */}
+      {mode === "create" && (
+        <div className="login-field">
+          <label className="login-label">Таны нэр</label>
+          <input
+            className="login-input"
+            value={name}
+            onChange={e=>setName(e.target.value)}
+            placeholder="Жишээ: Бат"
+            autoFocus
+            onKeyDown={e=>e.key==="Enter"&&handleCreate()}
+          />
+        </div>
+      )}
+
+      {/* ID field */}
+      <div className="login-field">
+        <label className="login-label">Нэвтрэх ID</label>
+        <input
+          className="login-input"
+          value={cid}
+          onChange={e=>setCid(e.target.value)}
+          placeholder="Жишээ: bat2024"
+          autoFocus={mode==="login"}
+          onKeyDown={e=>e.key==="Enter"&&(mode==="login"?handleLogin():handleCreate())}
+        />
+      </div>
+
+      {/* Actions */}
+      {mode === "login" ? (
+        <>
+          <button className="login-btn" onClick={handleLogin}>Нэвтрэх →</button>
+          <div className="login-divider">эсвэл</div>
+          <button className="login-alt-btn" onClick={()=>{setMode("create");setErr("");}}>
+            Шинэ бүртгэл үүсгэх
+          </button>
+        </>
+      ) : (
+        <>
+          <button className="login-btn" onClick={handleCreate}>Бүртгэл үүсгэх →</button>
+          <div className="login-divider">эсвэл</div>
+          <button className="login-alt-btn" onClick={()=>{setMode("login");setErr("");}}>
+            ← Нэвтрэхийн буцах
+          </button>
+        </>
+      )}
+
+      {/* Cancel — only shown when triggered from inside the app */}
+      {onCancel && (
+        <button
+          onClick={onCancel}
+          style={{
+            width:"100%", marginTop:16, background:"transparent", border:"none",
+            color:"rgba(255,255,255,0.35)", fontSize:13, fontWeight:500,
+            cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+            padding:"10px", borderRadius:10, transition:"color 0.15s",
+            letterSpacing:"0.2px",
+          }}
+          onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.65)"}
+          onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.35)"}
+        >
+          ← Буцах (нэвтрэлгүйгээр үргэлжлүүлэх)
+        </button>
+      )}
+    </div>
+  );
+
+  // Full-screen gradient overlay — same look whether triggered inline or standalone
+  return (
+    <div style={{
+      position: onCancel ? "fixed" : "relative",
+      inset: onCancel ? 0 : "auto",
+      zIndex: onCancel ? 200 : "auto",
+      minHeight: onCancel ? "auto" : "100vh",
+      width: "100%",
+      height: onCancel ? "100%" : "auto",
+      background: "linear-gradient(135deg,#012f35 0%,#025864 50%,#01404a 100%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 20,
+    }}>
+      {card}
     </div>
   );
 }
@@ -634,20 +696,34 @@ function DebtView({ uid, userName }) {
   const [filterMonth, setFilterMonth] = useState(() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; });
   const [showAddForm, setShowAddForm] = useState(false);
   const [editId, setEditId]       = useState(null);
+  const [formErr, setFormErr]     = useState("");
 
   // form state
-  const emptyForm = () => ({ debtor:userName, amount:"", note:"", date:todayStr(), type:"" });
+  const emptyForm = () => ({ debtor:userName || "", amount:"", note:"", date:todayStr(), type:"" });
   const [form, setForm] = useState(()=>emptyForm());
 
   useEffect(()=>{ store.set(storageKey, debts); },[debts]);
 
   const saveDebt = () => {
-    if (!form.amount) return;
+    const amt = String(form.amount).trim();
+    if (!amt) {
+      setFormErr("Дүн оруулна уу.");
+      return;
+    }
+    setFormErr("");
+    const entry = {
+      debtor: userName || form.debtor,
+      amount: amt,
+      note: form.note || "",
+      date: form.date || todayStr(),
+      type: form.type || "",
+      id: editId !== null ? editId : Date.now(),
+    };
     if (editId !== null) {
-      setDebts(p => p.map(d => d.id===editId ? {...d,...form} : d));
+      setDebts(p => p.map(d => d.id === editId ? entry : d));
       setEditId(null);
     } else {
-      setDebts(p => [...p, { debtor:form.debtor, amount:form.amount, note:form.note, date:form.date, type:form.type, id: Date.now() }]);
+      setDebts(p => [...p, entry]);
     }
     setForm(emptyForm());
     setShowAddForm(false);
@@ -656,6 +732,7 @@ function DebtView({ uid, userName }) {
   const startEdit = (debt) => {
     setForm({ debtor:userName, amount:debt.amount, note:debt.note, date:debt.date, type:debt.type });
     setEditId(debt.id);
+    setFormErr("");
     setShowAddForm(true);
   };
 
@@ -693,7 +770,7 @@ function DebtView({ uid, userName }) {
           <button onClick={()=>setViewMode(v=>v==="list"?"summary":"list")} style={{background:viewMode==="summary"?"#025864":"#f1f5f9",color:viewMode==="summary"?"#fff":"#025864",border:"none",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
             {viewMode==="list" ? "📊 Сарын тайлан" : "📋 Жагсаалт"}
           </button>
-          <button className="primary-btn" onClick={()=>{ setForm(emptyForm()); setEditId(null); setShowAddForm(true); }}>
+          <button className="primary-btn" onClick={()=>{ setForm(emptyForm()); setEditId(null); setFormErr(""); setShowAddForm(true); }}>
             + Өр нэмэх
           </button>
         </div>
@@ -713,6 +790,7 @@ function DebtView({ uid, userName }) {
       {showAddForm && (
         <div style={{background:"#fff",borderRadius:14,padding:20,marginBottom:16,border:"1px solid #e2e8f0",boxShadow:"0 4px 16px rgba(0,0,0,0.06)"}}>
           <div style={{fontWeight:800,fontSize:14,color:"#025864",marginBottom:16}}>{editId!==null?"Засах":"Шинэ өр бүртгэл"}</div>
+          {formErr && <div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:8,padding:"8px 14px",fontSize:13,color:"#dc2626",marginBottom:12,fontWeight:600}}>⚠ {formErr}</div>}
           {/* Row 1: name (locked) + amount + date + type */}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:12,marginBottom:12}}>
             <div>
@@ -725,9 +803,10 @@ function DebtView({ uid, userName }) {
             </div>
             <div>
               <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.5px",textTransform:"uppercase",display:"block",marginBottom:4}}>Дүн (₮)</label>
-              <input type="number" value={form.amount} onChange={e=>setForm(p=>({...p,amount:e.target.value}))}
+              <input value={form.amount}
+                onChange={e=>{setFormErr("");setForm(p=>({...p,amount:e.target.value}));}}
                 onKeyDown={e=>e.key==="Enter"&&saveDebt()}
-                placeholder="0" style={{width:"100%",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Mono',monospace",outline:"none",height:42}}/>
+                placeholder="0" style={{width:"100%",border:formErr?"1.5px solid #fca5a5":"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Mono',monospace",outline:"none",height:42}}/>
             </div>
             <div>
               <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.5px",textTransform:"uppercase",display:"block",marginBottom:4}}>Огноо</label>
@@ -752,7 +831,7 @@ function DebtView({ uid, userName }) {
             <button className="primary-btn" onClick={saveDebt} style={{height:42,whiteSpace:"nowrap",paddingLeft:20,paddingRight:20}}>
               {editId!==null?"✓ Хадгалах":"+ Нэмэх"}
             </button>
-            <button onClick={()=>{setShowAddForm(false);setForm(emptyForm());setEditId(null);}}
+            <button onClick={()=>{setShowAddForm(false);setForm(emptyForm());setEditId(null);setFormErr("");}}
               style={{height:42,background:"transparent",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"0 16px",fontSize:13,fontWeight:600,color:"#64748b",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>
               Болих
             </button>
@@ -849,47 +928,51 @@ function DebtCard({ debt, onEdit, onDelete, fmtDate }) {
 // ROOT APP
 // ═══════════════════════════════════════════════════════════════════════════
 export default function App() {
-  const [user, setUser]   = useState(() => store.get("bb_current_user"));
-  const [view, setView]   = useState("calendar");
+  // user is only needed for debt notebook
+  const [user, setUser]         = useState(() => store.get("bb_current_user"));
+  const [view, setView]         = useState("calendar");
   const [selectedDate, setSelectedDate] = useState(null);
+  const [showDebtLogin, setShowDebtLogin] = useState(false);
 
-  // per-user day data
-  const [allDays, setAllDays] = useState(() => user ? (store.get(uKey(user.id,"days"))||{}) : {});
-
-  useEffect(()=>{ if(user) store.set(uKey(user.id,"days"),allDays); },[allDays]);
+  // Calendar day data saved without login, under a shared "guest" key
+  const GUEST = "guest";
+  const [allDays, setAllDays] = useState(() => store.get(uKey(GUEST,"days")) || {});
+  useEffect(()=>{ store.set(uKey(GUEST,"days"), allDays); },[allDays]);
 
   const handleLogin = (u) => {
     store.set("bb_current_user", u);
     setUser(u);
-    setAllDays(store.get(uKey(u.id,"days"))||{});
-    setView("calendar");
+    setShowDebtLogin(false);
+    setView("debt");
   };
 
   const handleLogout = () => {
     store.del("bb_current_user");
     setUser(null);
     setView("calendar");
-    setAllDays({});
   };
 
   const hasData = (ds) => { const r=allDays[ds]; return r&&(r.savedMorning||r.savedEvening); };
 
-  if (!user) return (
-    <>
-      <style>{GLOBAL_CSS}</style>
-      <LoginView onLogin={handleLogin}/>
-    </>
-  );
+  const goToDebt = () => {
+    if (user) { setView("debt"); }
+    else { setShowDebtLogin(true); }
+  };
 
   const NAV = [
-    { id:"calendar", label:"Хуанли",           emoji:"📅" },
-    { id:"chat",     label:"Харилцах дэвтэр",  emoji:"📒" },
-    { id:"debt",     label:"Өрийн дэвтэр",     emoji:"💳" },
+    { id:"calendar", label:"Хуанли",           emoji:"📅", action: ()=>{ setShowDebtLogin(false); setView("calendar"); } },
+    { id:"chat",     label:"Харилцах дэвтэр",  emoji:"📒", action: ()=>{ setShowDebtLogin(false); setView("chat"); } },
+    { id:"debt",     label:"Өрийн дэвтэр",     emoji:"💳", action: goToDebt },
   ];
 
+  const activeNav = showDebtLogin ? "debt" : view;
+
+  // If showing debt login overlay — LoginView renders its own full-screen gradient
   return (
     <>
       <style>{GLOBAL_CSS}</style>
+      {/* Login overlay — shown on top of everything when accessing Өрийн дэвтэр without login */}
+      {showDebtLogin && <LoginView onLogin={handleLogin} onCancel={()=>setShowDebtLogin(false)}/>}
       <div className="app-wrap">
         {/* SIDEBAR — hidden in day view */}
         {view !== "day" && (
@@ -902,34 +985,37 @@ export default function App() {
                   <div style={{color:"rgba(255,255,255,0.35)",fontSize:10}}>Бараа бүртгэлийн систем</div>
                 </div>
               </div>
-              <div className="sidebar-user">
-                <div className="sidebar-avatar">{user.name.charAt(0).toUpperCase()}</div>
-                <div className="sidebar-username">{user.name}</div>
-              </div>
+              {user && (
+                <div className="sidebar-user">
+                  <div className="sidebar-avatar">{user.name.charAt(0).toUpperCase()}</div>
+                  <div className="sidebar-username">{user.name}</div>
+                </div>
+              )}
             </div>
             <nav className="sidebar-nav">
               {NAV.map(n=>(
-                <button key={n.id} className={`nav-btn${view===n.id?" active":""}`} onClick={()=>setView(n.id)}>
+                <button key={n.id} className={`nav-btn${activeNav===n.id?" active":""}`} onClick={n.action}>
                   <span style={{fontSize:16}}>{n.emoji}</span>{n.label}
+                  {n.id==="debt" && !user && <span style={{marginLeft:"auto",fontSize:10,opacity:0.4}}>🔒</span>}
                 </button>
               ))}
             </nav>
             <div className="sidebar-footer">
               <span style={{color:"rgba(255,255,255,0.25)",fontSize:11}}>© 2026 BarBook</span>
-              <button className="logout-btn" onClick={handleLogout}>Гарах</button>
+              {user && <button className="logout-btn" onClick={handleLogout}>Гарах</button>}
             </div>
           </aside>
         )}
 
         <div className="main">
           {view === "calendar" && (
-            <CalendarView uid={user.id} hasData={hasData} onDayClick={ds=>{setSelectedDate(ds);setView("day");}}/>
+            <CalendarView uid={GUEST} hasData={hasData} onDayClick={ds=>{setSelectedDate(ds);setView("day");}}/>
           )}
           {view === "day" && (
-            <DayView uid={user.id} dateStr={selectedDate} allDays={allDays} setAllDays={setAllDays} onBack={()=>setView("calendar")}/>
+            <DayView uid={GUEST} dateStr={selectedDate} allDays={allDays} setAllDays={setAllDays} onBack={()=>setView("calendar")}/>
           )}
-          {view === "chat" && <ChatView uid={user.id}/>}
-          {view === "debt" && <DebtView uid={user.id} userName={user.name}/>}
+          {view === "chat" && <ChatView uid={GUEST}/>}
+          {view === "debt" && user && <DebtView uid={user.id} userName={user.name}/>}
         </div>
       </div>
     </>
