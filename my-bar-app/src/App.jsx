@@ -248,104 +248,51 @@ function LoginView({ onLogin, onCancel }) {
 
   const card = (
     <div className="login-card">
-      {/* Logo */}
       <div className="login-logo">
         <div className="login-logo-icon">🍸</div>
         <div>
           <div className="login-title">BarBook</div>
         </div>
       </div>
-
-      {/* Subtitle */}
       <div className="login-subtitle">
         {mode==="login" ? "Өрийн дэвтэрт нэвтрэх" : "Шинэ бүртгэл үүсгэх"}
       </div>
-
-      {/* Error */}
       {err && <div className="login-err">{err}</div>}
-
-      {/* Name field (create only) */}
       {mode === "create" && (
         <div className="login-field">
           <label className="login-label">Таны нэр</label>
-          <input
-            className="login-input"
-            value={name}
-            onChange={e=>setName(e.target.value)}
-            placeholder="Жишээ: Бат"
-            autoFocus
-            onKeyDown={e=>e.key==="Enter"&&handleCreate()}
-          />
+          <input className="login-input" value={name} onChange={e=>setName(e.target.value)} placeholder="Жишээ: Бат" autoFocus onKeyDown={e=>e.key==="Enter"&&handleCreate()}/>
         </div>
       )}
-
-      {/* ID field */}
       <div className="login-field">
         <label className="login-label">Нэвтрэх ID</label>
-        <input
-          className="login-input"
-          value={cid}
-          onChange={e=>setCid(e.target.value)}
-          placeholder="Жишээ: bat2024"
-          autoFocus={mode==="login"}
-          onKeyDown={e=>e.key==="Enter"&&(mode==="login"?handleLogin():handleCreate())}
-        />
+        <input className="login-input" value={cid} onChange={e=>setCid(e.target.value)} placeholder="Жишээ: bat2024" autoFocus={mode==="login"} onKeyDown={e=>e.key==="Enter"&&(mode==="login"?handleLogin():handleCreate())}/>
       </div>
-
-      {/* Actions */}
       {mode === "login" ? (
         <>
           <button className="login-btn" onClick={handleLogin}>Нэвтрэх →</button>
           <div className="login-divider">эсвэл</div>
-          <button className="login-alt-btn" onClick={()=>{setMode("create");setErr("");}}>
-            Шинэ бүртгэл үүсгэх
-          </button>
+          <button className="login-alt-btn" onClick={()=>{setMode("create");setErr("");}}>Шинэ бүртгэл үүсгэх</button>
         </>
       ) : (
         <>
           <button className="login-btn" onClick={handleCreate}>Бүртгэл үүсгэх →</button>
           <div className="login-divider">эсвэл</div>
-          <button className="login-alt-btn" onClick={()=>{setMode("login");setErr("");}}>
-            ← Нэвтрэхийн буцах
-          </button>
+          <button className="login-alt-btn" onClick={()=>{setMode("login");setErr("");}}>← Нэвтрэхийн буцах</button>
         </>
       )}
-
-      {/* Cancel — only shown when triggered from inside the app */}
       {onCancel && (
-        <button
-          onClick={onCancel}
-          style={{
-            width:"100%", marginTop:16, background:"transparent", border:"none",
-            color:"rgba(255,255,255,0.35)", fontSize:13, fontWeight:500,
-            cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
-            padding:"10px", borderRadius:10, transition:"color 0.15s",
-            letterSpacing:"0.2px",
-          }}
+        <button onClick={onCancel} style={{width:"100%",marginTop:16,background:"transparent",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",padding:"10px",borderRadius:10,transition:"color 0.15s",letterSpacing:"0.2px"}}
           onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.65)"}
-          onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.35)"}
-        >
+          onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.35)"}>
           ← Буцах (нэвтрэлгүйгээр үргэлжлүүлэх)
         </button>
       )}
     </div>
   );
 
-  // Full-screen gradient overlay — same look whether triggered inline or standalone
   return (
-    <div style={{
-      position: onCancel ? "fixed" : "relative",
-      inset: onCancel ? 0 : "auto",
-      zIndex: onCancel ? 200 : "auto",
-      minHeight: onCancel ? "auto" : "100vh",
-      width: "100%",
-      height: onCancel ? "100%" : "auto",
-      background: "linear-gradient(135deg,#012f35 0%,#025864 50%,#01404a 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 20,
-    }}>
+    <div style={{position:onCancel?"fixed":"relative",inset:onCancel?0:"auto",zIndex:onCancel?200:"auto",minHeight:onCancel?"auto":"100vh",width:"100%",height:onCancel?"100%":"auto",background:"linear-gradient(135deg,#012f35 0%,#025864 50%,#01404a 100%)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       {card}
     </div>
   );
@@ -414,9 +361,9 @@ function CalendarView({ uid, onDayClick, hasData }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DAY VIEW — original fixed-column design, unlimited rows
+// DAY VIEW
 // ═══════════════════════════════════════════════════════════════════════════
-const BLANK_ROW = () => ({ name:"", price:"", morning:"", evening:"", expense:"", totalSales:"" });
+const BLANK_ROW = () => ({ name:"", price:"", morning:"", supply:"", evening:"", expense:"", totalSales:"" });
 
 function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
   const [flash, setFlash] = useState(false);
@@ -426,9 +373,8 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
     const prev = prevDayStr(ds);
     const prevDay = allDays[prev];
     if (prevDay && prevDay.savedEvening && prevDay.rows) {
-      // auto-fill: copy evening → morning, keep price, clear evening & calculated fields
       return {
-        rows: prevDay.rows.map(r=>({ name:r.name, price:r.price||"", morning:r.evening, evening:"", expense:"", totalSales:"" })),
+        rows: prevDay.rows.map(r=>({ name:r.name, price:r.price||"", morning:r.evening, supply:"", evening:"", expense:"", totalSales:"" })),
         savedMorning:false, savedEvening:false, autoFilledFrom:prev
       };
     }
@@ -456,10 +402,12 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
   const handleSave = () => {
     const saved = rows.map(r => {
       const mv = parseFloat(r.morning)||0;
+      const sv = parseFloat(r.supply)||0;
       const ev = parseFloat(r.evening)||0;
       const pv = parseFloat(r.price)||0;
-      const expense = (mv===0&&ev===0) ? "" : String(Math.max(0,mv-ev));
-      const soldQty = Math.max(0, mv - ev);
+      const effective = mv + sv;
+      const soldQty = Math.max(0, effective - ev);
+      const expense = (effective===0&&ev===0) ? "" : String(soldQty);
       const totalSales = (pv > 0 && soldQty > 0) ? String(soldQty * pv) : "";
       return {...r, expense, totalSales};
     });
@@ -477,6 +425,7 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
   };
 
   const totalMorning  = rows.reduce((s,r)=>s+(parseFloat(r.morning)||0),0);
+  const totalSupply   = rows.reduce((s,r)=>s+(parseFloat(r.supply)||0),0);
   const totalEvening  = rows.reduce((s,r)=>s+(parseFloat(r.evening)||0),0);
   const totalExpense  = rows.reduce((s,r)=>s+(parseFloat(r.expense)||0),0);
   const totalSalesSum = rows.reduce((s,r)=>s+(parseFloat(r.totalSales)||0),0);
@@ -499,7 +448,6 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
 
   return (
     <div style={{minHeight:"100vh",background:"#eef1f4",paddingBottom:100}}>
-      {/* Top bar */}
       <div style={{background:"#025864",padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 2px 12px rgba(2,88,100,0.3)"}}>
         <button className="back-btn-dv" onClick={onBack}>
           <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -513,6 +461,7 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
         <div style={{display:"flex",gap:16}}>
           {[
             {l:"Өглөө",  v:totalMorning||"—",  c:"#7dd3e8"},
+            {l:"Орлого", v:totalSupply||"—",    c:"#6ee7b7"},
             {l:"Орой",   v:totalEvening||"—",   c:"#86efac"},
             {l:"Зарлага",v:totalExpense||"—",   c:"#fde68a"},
             {l:"Борлуулалт",v:totalSalesSum>0?(totalSalesSum.toLocaleString()+"₮"):"—",c:"#f9a8d4"},
@@ -538,12 +487,13 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
             <thead>
               <tr>
                 <th style={{...thS("center","#334155"),width:"3%"}}>#</th>
-                <th style={{...thS("left","#334155"),  width:"22%"}}>Барааны нэр</th>
-                <th style={{...thS("center","#7c3aed"),width:"12%"}}>Нэгж үнэ ₮</th>
-                <th style={{...thS("center","#1d4ed8"),width:"13%"}}>Өглөөний тоо</th>
-                <th style={{...thS("center","#15803d"),width:"13%"}}>Оройн тоо</th>
-                <th style={{...thS("center","#a16207"),width:"12%"}}>Зарлага</th>
-                <th style={{...thS("center","#be185d"),width:"18%"}}>Нийт борлуулалт ₮</th>
+                <th style={{...thS("left","#334155"),  width:"20%"}}>Барааны нэр</th>
+                <th style={{...thS("center","#7c3aed"),width:"10%"}}>Нэгж үнэ ₮</th>
+                <th style={{...thS("center","#1d4ed8"),width:"11%"}}>Өглөөний тоо</th>
+                <th style={{...thS("center","#0e7490"),width:"11%"}}>Орлого</th>
+                <th style={{...thS("center","#15803d"),width:"11%"}}>Оройн тоо</th>
+                <th style={{...thS("center","#a16207"),width:"11%"}}>Зарлага</th>
+                <th style={{...thS("center","#be185d"),width:"17%"}}>Нийт борлуулалт ₮</th>
                 <th style={{...thS("center","#334155"),width:"4%"}}></th>
               </tr>
             </thead>
@@ -557,19 +507,16 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
                       style={{width:"100%",border:"none",outline:"none",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,color:"#1e293b",background:"transparent",padding:"4px 2px"}}/>
                   </td>
                   <td style={cellStyle("#f5f3ff")}>
-                    <input value={row.price} onChange={e=>updateRow(i,"price",e.target.value)}
-                      placeholder="—"
-                      style={{...inStyle("#7c3aed")}}/>
+                    <input value={row.price} onChange={e=>updateRow(i,"price",e.target.value)} placeholder="—" style={{...inStyle("#7c3aed")}}/>
                   </td>
                   <td style={cellStyle("#eff6ff")}>
-                    <input value={row.morning} onChange={e=>updateRow(i,"morning",e.target.value)}
-                      placeholder="—"
-                      style={{...inStyle("#1d4ed8")}}/>
+                    <input value={row.morning} onChange={e=>updateRow(i,"morning",e.target.value)} placeholder="—" style={{...inStyle("#1d4ed8")}}/>
+                  </td>
+                  <td style={cellStyle("#ecfeff")}>
+                    <input value={row.supply} onChange={e=>updateRow(i,"supply",e.target.value)} placeholder="—" style={{...inStyle("#0e7490")}}/>
                   </td>
                   <td style={cellStyle("#f0fdf4")}>
-                    <input value={row.evening} onChange={e=>updateRow(i,"evening",e.target.value)}
-                      placeholder="—"
-                      style={{...inStyle("#15803d")}}/>
+                    <input value={row.evening} onChange={e=>updateRow(i,"evening",e.target.value)} placeholder="—" style={{...inStyle("#15803d")}}/>
                   </td>
                   <td style={{...cellStyle("#fefce8"),textAlign:"center"}}>
                     <span style={{fontSize:13,fontWeight:700,color:row.expense&&row.expense!=="0"?"#a16207":"#d1d5db"}}>
@@ -590,13 +537,13 @@ function DayView({ uid, dateStr, onBack, allDays, setAllDays }) {
                   </td>
                 </tr>
               ))}
-              {/* Total row */}
               <tr style={{borderTop:"2px solid #e2e8f0",background:"#f8fafc"}}>
                 <td style={{padding:"10px"}} colSpan={2}>
                   <span style={{padding:"10px 0px",color:"#475569",fontSize:11,textTransform:"uppercase",letterSpacing:"0.5px",fontWeight:700}}>Нийт дүн</span>
                 </td>
                 <td style={{padding:"10px",textAlign:"center",color:"#7c3aed",fontSize:12,fontWeight:700,fontFamily:"'DM Mono',monospace"}}>—</td>
                 <td style={{padding:"10px",textAlign:"center",color:"#1d4ed8",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{totalMorning>0?totalMorning:"—"}</td>
+                <td style={{padding:"10px",textAlign:"center",color:"#0e7490",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{totalSupply>0?totalSupply:"—"}</td>
                 <td style={{padding:"10px",textAlign:"center",color:"#15803d",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{totalEvening>0?totalEvening:"—"}</td>
                 <td style={{padding:"10px",textAlign:"center",color:"#a16207",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{totalExpense>0?totalExpense:"—"}</td>
                 <td style={{padding:"10px",textAlign:"center",color:"#be185d",fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>
@@ -726,13 +673,12 @@ function ChatView({ uid }) {
 function DebtView({ uid, userName }) {
   const storageKey = uKey(uid, "debts");
   const [debts, setDebts]         = useState(() => store.get(storageKey) || []);
-  const [viewMode, setViewMode]   = useState("list"); // list | summary
+  const [viewMode, setViewMode]   = useState("list");
   const [filterMonth, setFilterMonth] = useState(() => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; });
   const [showAddForm, setShowAddForm] = useState(false);
   const [editId, setEditId]       = useState(null);
   const [formErr, setFormErr]     = useState("");
 
-  // form state
   const emptyForm = () => ({ debtor:userName || "", amount:"", note:"", date:todayStr(), type:"" });
   const [form, setForm] = useState(()=>emptyForm());
 
@@ -740,61 +686,26 @@ function DebtView({ uid, userName }) {
 
   const saveDebt = () => {
     const amt = String(form.amount).trim();
-    if (!amt) {
-      setFormErr("Дүн оруулна уу.");
-      return;
-    }
+    if (!amt) { setFormErr("Дүн оруулна уу."); return; }
     setFormErr("");
-    const entry = {
-      debtor: userName || form.debtor,
-      amount: amt,
-      note: form.note || "",
-      date: form.date || todayStr(),
-      type: form.type || "",
-      id: editId !== null ? editId : Date.now(),
-    };
-    if (editId !== null) {
-      setDebts(p => p.map(d => d.id === editId ? entry : d));
-      setEditId(null);
-    } else {
-      setDebts(p => [...p, entry]);
-    }
-    setForm(emptyForm());
-    setShowAddForm(false);
+    const entry = { debtor:userName||form.debtor, amount:amt, note:form.note||"", date:form.date||todayStr(), type:form.type||"", id:editId!==null?editId:Date.now() };
+    if (editId !== null) { setDebts(p=>p.map(d=>d.id===editId?entry:d)); setEditId(null); }
+    else { setDebts(p=>[...p,entry]); }
+    setForm(emptyForm()); setShowAddForm(false);
   };
 
-  const startEdit = (debt) => {
-    setForm({ debtor:userName, amount:debt.amount, note:debt.note, date:debt.date, type:debt.type });
-    setEditId(debt.id);
-    setFormErr("");
-    setShowAddForm(true);
-  };
+  const startEdit = (debt) => { setForm({debtor:userName,amount:debt.amount,note:debt.note,date:debt.date,type:debt.type}); setEditId(debt.id); setFormErr(""); setShowAddForm(true); };
+  const deleteDebt = (id) => setDebts(p=>p.filter(d=>d.id!==id));
 
-  const deleteDebt = (id) => setDebts(p => p.filter(d => d.id!==id));
-
-
-  // Month filtering
-  const monthsSet = new Set(debts.map(d => d.date.slice(0,7)));
+  const monthsSet = new Set(debts.map(d=>d.date.slice(0,7)));
   const months = Array.from(monthsSet).sort().reverse();
-
-  const filteredDebts = debts.filter(d => d.date.startsWith(filterMonth));
+  const filteredDebts = debts.filter(d=>d.date.startsWith(filterMonth));
   const totalAmount = filteredDebts.reduce((s,d)=>s+(parseFloat(d.amount)||0),0);
-  // group by type for summary
-  const byType = filteredDebts.reduce((acc,d)=>{
-    const t = d.type||"(Төрөл байхгүй)";
-    if(!acc[t]) acc[t]={count:0,total:0};
-    acc[t].count++; acc[t].total+=parseFloat(d.amount)||0;
-    return acc;
-  },{});
-
-  const fmtDate = ds => {
-    const [y,m,d2] = ds.split("-");
-    return `${y}/${m}/${d2}`;
-  };
+  const byType = filteredDebts.reduce((acc,d)=>{ const t=d.type||"(Төрөл байхгүй)"; if(!acc[t]) acc[t]={count:0,total:0}; acc[t].count++; acc[t].total+=parseFloat(d.amount)||0; return acc; },{});
+  const fmtDate = ds => { const [y,m,d2]=ds.split("-"); return `${y}/${m}/${d2}`; };
 
   return (
     <div style={{padding:"24px 28px",minHeight:"100%"}}>
-      {/* Header */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
         <div>
           <div className="page-title">Өрийн дэвтэр 💳</div>
@@ -804,28 +715,19 @@ function DebtView({ uid, userName }) {
           <button onClick={()=>setViewMode(v=>v==="list"?"summary":"list")} style={{background:viewMode==="summary"?"#025864":"#f1f5f9",color:viewMode==="summary"?"#fff":"#025864",border:"none",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
             {viewMode==="list" ? "📊 Сарын тайлан" : "📋 Жагсаалт"}
           </button>
-          <button className="primary-btn" onClick={()=>{ setForm(emptyForm()); setEditId(null); setFormErr(""); setShowAddForm(true); }}>
-            + Өр нэмэх
-          </button>
+          <button className="primary-btn" onClick={()=>{ setForm(emptyForm()); setEditId(null); setFormErr(""); setShowAddForm(true); }}>+ Өр нэмэх</button>
         </div>
       </div>
-
-      {/* Month filter */}
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16,flexWrap:"wrap"}}>
         <span style={{fontSize:12,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.5px"}}>Сар:</span>
         {[...new Set([filterMonth,...months])].map(m=>(
-          <button key={m} onClick={()=>setFilterMonth(m)} style={{background:filterMonth===m?"#025864":"#f1f5f9",color:filterMonth===m?"#fff":"#475569",border:"none",borderRadius:8,padding:"5px 12px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-            {m}
-          </button>
+          <button key={m} onClick={()=>setFilterMonth(m)} style={{background:filterMonth===m?"#025864":"#f1f5f9",color:filterMonth===m?"#fff":"#475569",border:"none",borderRadius:8,padding:"5px 12px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{m}</button>
         ))}
       </div>
-
-      {/* Add/Edit Form */}
       {showAddForm && (
         <div style={{background:"#fff",borderRadius:14,padding:20,marginBottom:16,border:"1px solid #e2e8f0",boxShadow:"0 4px 16px rgba(0,0,0,0.06)"}}>
           <div style={{fontWeight:800,fontSize:14,color:"#025864",marginBottom:16}}>{editId!==null?"Засах":"Шинэ өр бүртгэл"}</div>
           {formErr && <div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:8,padding:"8px 14px",fontSize:13,color:"#dc2626",marginBottom:12,fontWeight:600}}>⚠ {formErr}</div>}
-          {/* Row 1: name (locked) + amount + date + type */}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:12,marginBottom:12}}>
             <div>
               <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.5px",textTransform:"uppercase",display:"block",marginBottom:4}}>Нэр (Та)</label>
@@ -837,43 +739,27 @@ function DebtView({ uid, userName }) {
             </div>
             <div>
               <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.5px",textTransform:"uppercase",display:"block",marginBottom:4}}>Дүн (₮)</label>
-              <input value={form.amount}
-                onChange={e=>{setFormErr("");setForm(p=>({...p,amount:e.target.value}));}}
-                onKeyDown={e=>e.key==="Enter"&&saveDebt()}
-                placeholder="0" style={{width:"100%",border:formErr?"1.5px solid #fca5a5":"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Mono',monospace",outline:"none",height:42}}/>
+              <input value={form.amount} onChange={e=>{setFormErr("");setForm(p=>({...p,amount:e.target.value}));}} onKeyDown={e=>e.key==="Enter"&&saveDebt()} placeholder="0" style={{width:"100%",border:formErr?"1.5px solid #fca5a5":"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Mono',monospace",outline:"none",height:42}}/>
             </div>
             <div>
               <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.5px",textTransform:"uppercase",display:"block",marginBottom:4}}>Огноо</label>
-              <input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))}
-                style={{width:"100%",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",height:42}}/>
+              <input type="date" value={form.date} onChange={e=>setForm(p=>({...p,date:e.target.value}))} style={{width:"100%",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",height:42}}/>
             </div>
             <div>
               <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.5px",textTransform:"uppercase",display:"block",marginBottom:4}}>Төрөл</label>
-              <input value={form.type} onChange={e=>setForm(p=>({...p,type:e.target.value}))}
-                onKeyDown={e=>e.key==="Enter"&&saveDebt()}
-                placeholder="Жишэ: Аяга, Мөнгө…" style={{width:"100%",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",height:42}}/>
+              <input value={form.type} onChange={e=>setForm(p=>({...p,type:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&saveDebt()} placeholder="Жишэ: Аяга, Мөнгө…" style={{width:"100%",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",height:42}}/>
             </div>
           </div>
-          {/* Row 2: note + action buttons */}
           <div style={{display:"flex",gap:12,alignItems:"flex-end"}}>
             <div style={{flex:1}}>
               <label style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.5px",textTransform:"uppercase",display:"block",marginBottom:4}}>Тэмдэглэл</label>
-              <input value={form.note} onChange={e=>setForm(p=>({...p,note:e.target.value}))}
-                onKeyDown={e=>e.key==="Enter"&&saveDebt()}
-                placeholder="Нэмэлт тэмдэглэл…" style={{width:"100%",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",height:42}}/>
+              <input value={form.note} onChange={e=>setForm(p=>({...p,note:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&saveDebt()} placeholder="Нэмэлт тэмдэглэл…" style={{width:"100%",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",height:42}}/>
             </div>
-            <button className="primary-btn" onClick={saveDebt} style={{height:42,whiteSpace:"nowrap",paddingLeft:20,paddingRight:20}}>
-              {editId!==null?"✓ Хадгалах":"+ Нэмэх"}
-            </button>
-            <button onClick={()=>{setShowAddForm(false);setForm(emptyForm());setEditId(null);setFormErr("");}}
-              style={{height:42,background:"transparent",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"0 16px",fontSize:13,fontWeight:600,color:"#64748b",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>
-              Болих
-            </button>
+            <button className="primary-btn" onClick={saveDebt} style={{height:42,whiteSpace:"nowrap",paddingLeft:20,paddingRight:20}}>{editId!==null?"✓ Хадгалах":"+ Нэмэх"}</button>
+            <button onClick={()=>{setShowAddForm(false);setForm(emptyForm());setEditId(null);setFormErr("");}} style={{height:42,background:"transparent",border:"1.5px solid #e2e8f0",borderRadius:10,padding:"0 16px",fontSize:13,fontWeight:600,color:"#64748b",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>Болих</button>
           </div>
         </div>
       )}
-
-      {/* MONTHLY SUMMARY */}
       {viewMode === "summary" && (
         <div className="month-summary-card">
           <div style={{fontWeight:800,fontSize:16,color:"#025864",marginBottom:16}}>📊 {filterMonth} — Сарын тайлан</div>
@@ -918,8 +804,6 @@ function DebtView({ uid, userName }) {
           )}
         </div>
       )}
-
-      {/* DEBT LIST with expandable tables */}
       {viewMode === "list" && (
         <div>
           {filteredDebts.length === 0 && (
@@ -962,53 +846,33 @@ function DebtCard({ debt, onEdit, onDelete, fmtDate }) {
 // ROOT APP
 // ═══════════════════════════════════════════════════════════════════════════
 export default function App() {
-  // user is only needed for debt notebook
   const [user, setUser]         = useState(() => store.get("bb_current_user"));
   const [view, setView]         = useState("calendar");
   const [selectedDate, setSelectedDate] = useState(null);
   const [showDebtLogin, setShowDebtLogin] = useState(false);
 
-  // Calendar day data saved without login, under a shared "guest" key
   const GUEST = "guest";
   const [allDays, setAllDays] = useState(() => store.get(uKey(GUEST,"days")) || {});
   useEffect(()=>{ store.set(uKey(GUEST,"days"), allDays); },[allDays]);
 
-  const handleLogin = (u) => {
-    store.set("bb_current_user", u);
-    setUser(u);
-    setShowDebtLogin(false);
-    setView("debt");
-  };
-
-  const handleLogout = () => {
-    store.del("bb_current_user");
-    setUser(null);
-    setView("calendar");
-  };
-
+  const handleLogin = (u) => { store.set("bb_current_user",u); setUser(u); setShowDebtLogin(false); setView("debt"); };
+  const handleLogout = () => { store.del("bb_current_user"); setUser(null); setView("calendar"); };
   const hasData = (ds) => { const r=allDays[ds]; return r&&(r.savedMorning||r.savedEvening); };
-
-  const goToDebt = () => {
-    if (user) { setView("debt"); }
-    else { setShowDebtLogin(true); }
-  };
+  const goToDebt = () => { if (user) { setView("debt"); } else { setShowDebtLogin(true); } };
 
   const NAV = [
-    { id:"calendar", label:"Хуанли",           emoji:"📅", action: ()=>{ setShowDebtLogin(false); setView("calendar"); } },
-    { id:"chat",     label:"Харилцах дэвтэр",  emoji:"📒", action: ()=>{ setShowDebtLogin(false); setView("chat"); } },
-    { id:"debt",     label:"Өрийн дэвтэр",     emoji:"💳", action: goToDebt },
+    { id:"calendar", label:"Хуанли",           emoji:"📅", action:()=>{ setShowDebtLogin(false); setView("calendar"); } },
+    { id:"chat",     label:"Харилцах дэвтэр",  emoji:"📒", action:()=>{ setShowDebtLogin(false); setView("chat"); } },
+    { id:"debt",     label:"Өрийн дэвтэр",     emoji:"💳", action:goToDebt },
   ];
 
   const activeNav = showDebtLogin ? "debt" : view;
 
-  // If showing debt login overlay — LoginView renders its own full-screen gradient
   return (
     <>
       <style>{GLOBAL_CSS}</style>
-      {/* Login overlay — shown on top of everything when accessing Өрийн дэвтэр without login */}
       {showDebtLogin && <LoginView onLogin={handleLogin} onCancel={()=>setShowDebtLogin(false)}/>}
       <div className="app-wrap">
-        {/* SIDEBAR — hidden in day view */}
         {view !== "day" && (
           <aside className="sidebar">
             <div className="sidebar-header">
@@ -1030,7 +894,7 @@ export default function App() {
               {NAV.map(n=>(
                 <button key={n.id} className={`nav-btn${activeNav===n.id?" active":""}`} onClick={n.action}>
                   <span style={{fontSize:16}}>{n.emoji}</span>{n.label}
-                  {n.id==="debt" && !user && <span style={{marginLeft:"auto",fontSize:10,opacity:0.4}}>🔒</span>}
+                  {n.id==="debt"&&!user&&<span style={{marginLeft:"auto",fontSize:10,opacity:0.4}}>🔒</span>}
                 </button>
               ))}
             </nav>
@@ -1040,16 +904,11 @@ export default function App() {
             </div>
           </aside>
         )}
-
         <div className="main">
-          {view === "calendar" && (
-            <CalendarView uid={GUEST} hasData={hasData} onDayClick={ds=>{setSelectedDate(ds);setView("day");}}/>
-          )}
-          {view === "day" && (
-            <DayView uid={GUEST} dateStr={selectedDate} allDays={allDays} setAllDays={setAllDays} onBack={()=>setView("calendar")}/>
-          )}
-          {view === "chat" && <ChatView uid={GUEST}/>}
-          {view === "debt" && user && <DebtView uid={user.id} userName={user.name}/>}
+          {view==="calendar"&&<CalendarView uid={GUEST} hasData={hasData} onDayClick={ds=>{setSelectedDate(ds);setView("day");}}/>}
+          {view==="day"&&<DayView uid={GUEST} dateStr={selectedDate} allDays={allDays} setAllDays={setAllDays} onBack={()=>setView("calendar")}/>}
+          {view==="chat"&&<ChatView uid={GUEST}/>}
+          {view==="debt"&&user&&<DebtView uid={user.id} userName={user.name}/>}
         </div>
       </div>
     </>
